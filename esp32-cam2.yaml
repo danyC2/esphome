@@ -1,0 +1,166 @@
+#------------------------------
+#-- esp32-cam2.yaml
+#------------------------------
+
+# https://esphome.io/components/esp32_camera.html
+# https://randomnerdtutorials.com/esp32-cam-ai-thinker-pinout/
+
+substitutions:
+  devicename: esp32-cam2
+
+esphome:
+  name: $devicename
+
+esp32:
+  board: esp32cam
+  framework:
+    type: arduino
+
+# logging
+logger:
+
+# enable API (log output using ESPHome API)
+#api:
+
+# enable OTA (for subsequent upgrades)
+ota:
+  password: !secret ota_password_esp32-cam2
+
+# wireless configuration
+wifi:
+
+  #ssid: !secret wifi_ssid_iot
+  #password: !secret wifi_password_iot
+  
+  networks:
+  
+  # pfSense DHCP static mapping  
+  - ssid: !secret wifi_ssid_iot
+    password: !secret wifi_password_iot
+    
+  # Salt Fiber DHCP static mapping  
+  - ssid: !secret wifi_ssid_fiber
+    password: !secret wifi_password_fiber
+
+  # Cabanon DHCP static mapping  
+  - ssid: !secret wifi_ssid_cabanon
+    password: !secret wifi_password_cabanon    
+
+  # St-Georges DHCP static mapping  
+  - ssid: !secret wifi_ssid_georges
+    password: !secret wifi_password_georges
+
+  # connecting OTA specific IP address  
+  use_address: 10.0.30.102
+  
+  ap:
+    ssid: $devicename
+    password: !secret hotspot_password_esp32-cam
+  
+  # amount of time to wait before rebooting when no WiFi connection exists
+  reboot_timeout: 0s
+  
+  # power save modes (NONE, LIGHT or HIGH)
+  power_save_mode: LIGHT
+
+# enable HOTSPOT web page
+captive_portal:
+
+# enable WEB server
+web_server:
+  port: 8080
+  
+# enable switches
+switch:
+
+  - platform: restart
+    name: "RESTART"
+
+  - platform: gpio
+    name: "FLASH"
+    inverted: false
+    id: led_flash
+    pin: GPIO4
+
+  - platform: gpio
+    name: "RED LED"
+    inverted: true
+    id: led
+    pin: GPIO33
+    
+# display informations (sensors)
+sensor:
+
+  - platform: wifi_signal
+    name: "RSSI"
+    update_interval: 60s
+
+  - platform: uptime
+    name: "UPTIME"
+    update_interval: 60s
+    
+# display informations (text)
+text_sensor:
+
+  - platform: version
+    name: "VERSION"  
+
+  - platform: wifi_info
+    ip_address:
+      name: "ADDRESS"
+      id: wifi_ip
+    ssid:
+      name: "SSID"
+      id: wifi_ssid
+
+# display information (binary sensors)
+binary_sensor:
+
+  - platform: status
+    name: "STATUS"  
+
+# Ai-Thinker
+esp32_camera:
+
+  # name of the camera
+  name: $devicename
+
+  # camera configuration
+  external_clock:
+    pin: GPIO0
+    frequency: 20MHz
+  i2c_pins:
+    sda: GPIO26
+    scl: GPIO27
+  data_pins: [GPIO5, GPIO18, GPIO19, GPIO21, GPIO36, GPIO39, GPIO34, GPIO35]
+  vsync_pin: GPIO25
+  href_pin: GPIO23
+  pixel_clock_pin: GPIO22
+  power_down_pin: GPIO32
+  
+  # resolution
+  # 400x296 (CIF)
+  # 640x480 (VGA, default)
+  # 800x600 (SVGA)
+  # 1024x768 (XGA)
+  # 1280x1024 (SXGA)
+  # 1600x1200 (UXGA)
+  resolution: 1024x768
+  
+  # maximum framerate
+  max_framerate: 3 fps
+  
+  # flip the image vertically
+  vertical_flip: false
+  
+  # mirror the image horizontally
+  horizontal_mirror: false
+  
+  # from 10 (best) to 63 (worst)
+  jpeg_quality: 10
+  
+# enable camera web server
+esp32_camera_web_server:
+  # streaming
+  - port: 80
+    mode: stream
